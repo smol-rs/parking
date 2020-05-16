@@ -1,0 +1,13 @@
+[package]
+name = "parking"
+version = "1.0.0"
+authors = ["Stjepan Glavina <stjepang@gmail.com>"]
+edition = "2018"
+description = "Thread parking and unparking"
+license = "Apache-2.0 OR MIT"
+repository = "https://github.com/stjepang/parking"
+homepage = "https://github.com/stjepang/parking"
+documentation = "https://docs.rs/parking"
+keywords = ["park", "notify", "thread", "wake", "condition"]
+categories = ["concurrency"]
+readme = "README.md"
