@@ -8,8 +8,6 @@ https://github.com/stjepang/parking)
 https://crates.io/crates/parking)
 [![Documentation](https://docs.rs/parking/badge.svg)](
 https://docs.rs/parking)
-[![Chat](https://img.shields.io/discord/701824908866617385.svg?logo=discord)](
-https://discord.gg/x6m5Vvt)
 
 Thread parking and unparking.
 
