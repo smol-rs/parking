@@ -14,34 +14,34 @@ https://discord.gg/x6m5Vvt)
 Thread parking and unparking.
 
 This is a copy of the
-[`park()`][`std::thread::park()`]/[`unpark()`][`std::thread::Thread::unpark()`] mechanism from
+[`park()`]()https://doc.rust-lang.org/std/thread/fn.park.html/[`unpark()`](https://doc.rust-lang.org/std/thread/struct.Thread.html#method.unpark) mechanism from
 the standard library.
 
 ## What is parking
 
-Conceptually, each [`Parker`] has a token which is initially not present:
+Conceptually, each `Parker` has a token which is initially not present:
 
-* The [`Parker::park()`] method blocks the current thread unless or until the token is
+* The `Parker::park()` method blocks the current thread unless or until the token is
   available, at which point it automatically consumes the token. It may also return
   *spuriously*, without consuming the token.
 
-* The [`Parker::park_timeout()`] method works the same as [`Parker::park()`], but blocks until
+* The `Parker::park_timeout()` method works the same as `Parker::park()`, but blocks until
   a timeout is reached.
 
-* The [`Parker::park_deadline()`] method works the same as [`Parker::park()`], but blocks until
+* The `Parker::park_deadline()` method works the same as `Parker::park()`, but blocks until
   a deadline is reached.
 
-* The [`Parker::unpark()`] and [`Unparker::unpark()`] methods atomically make the token
-  available if it wasn't already. Because the token is initially absent, [`Unparker::unpark()`]
-  followed by [`Parker::park()`] will result in the second call returning immediately.
+* The `Parker::unpark()` and `Unparker::unpark()` methods atomically make the token
+  available if it wasn't already. Because the token is initially absent, `Unparker::unpark()`
+  followed by `Parker::park()` will result in the second call returning immediately.
 
 ## Analogy with channels
 
-Another way of thinking about [`Parker`] is as a bounded
+Another way of thinking about `Parker` is as a bounded
 [channel](https://doc.rust-lang.org/std/sync/mpsc/fn.sync_channel.html) with capacity of 1.
 
-Then, [`Parker::park()`] is equivalent to blocking on a
-[receive](https://doc.rust-lang.org/std/sync/mpsc/fn.sync_channel.html) operation, and [`Unparker::unpark()`] is
+Then, `Parker::park()` is equivalent to blocking on a
+[receive](https://doc.rust-lang.org/std/sync/mpsc/fn.sync_channel.html) operation, and `Unparker::unpark()` is
 equivalent to a non-blocking [send](https://doc.rust-lang.org/std/sync/mpsc/struct.SyncSender.html#method.try_send) operation.
 
 ## Examples
