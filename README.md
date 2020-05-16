@@ -12,7 +12,7 @@ https://docs.rs/parking)
 Thread parking and unparking.
 
 This is a copy of the
-[`park()`]()https://doc.rust-lang.org/std/thread/fn.park.html/[`unpark()`](https://doc.rust-lang.org/std/thread/struct.Thread.html#method.unpark) mechanism from
+[`park()`](https://doc.rust-lang.org/std/thread/fn.park.html)/[`unpark()`](https://doc.rust-lang.org/std/thread/struct.Thread.html#method.unpark) mechanism from
 the standard library.
 
 ## What is parking
