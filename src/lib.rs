@@ -168,8 +168,7 @@ impl Parker {
 
     /// Atomically makes the token available if it is not already.
     ///
-    /// This method will wake up the thread blocked on [`Parker::park()`],
-    /// [`Parker::park_timeout()`], or [`Parker::park_deadline()`], if there is one.
+    /// The next time a thread blocks on this [`Parker`], it will wake up immediately.
     ///
     /// # Examples
     ///
