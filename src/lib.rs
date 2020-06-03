@@ -295,8 +295,8 @@ impl Inner {
         }
 
         // If the timeout is zero, then there is no need to actually block.
-        if let Some(ref dur) = timeout {
-            if *dur == Duration::from_millis(0) {
+        if let Some(dur) = timeout {
+            if dur == Duration::from_millis(0) {
                 return false;
             }
         }
