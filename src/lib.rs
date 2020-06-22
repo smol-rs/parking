@@ -33,6 +33,7 @@
 
 #![warn(missing_docs, missing_debug_implementations, rust_2018_idioms)]
 
+use std::cell::Cell;
 use std::fmt;
 use std::marker::PhantomData;
 use std::sync::atomic::AtomicUsize;
@@ -68,10 +69,8 @@ use std::time::{Duration, Instant};
 /// ```
 pub struct Parker {
     unparker: Unparker,
-    _marker: PhantomData<*const ()>,
+    _marker: PhantomData<Cell<()>>,
 }
-
-unsafe impl Send for Parker {}
 
 impl Parker {
     /// Creates a new [`Parker`].
@@ -225,9 +224,6 @@ impl fmt::Debug for Parker {
 pub struct Unparker {
     inner: Arc<Inner>,
 }
-
-unsafe impl Send for Unparker {}
-unsafe impl Sync for Unparker {}
 
 impl Unparker {
     /// Atomically makes the token available if it is not already.
