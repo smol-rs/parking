@@ -1,35 +1,33 @@
 //! Thread parking and unparking.
 //!
-//! This is a copy of the
-//! [`park()`][`std::thread::park()`]/[`unpark()`][`std::thread::Thread::unpark()`] mechanism from
-//! the standard library.
+//! A parker is in either notified or unnotified state. Method [`park()`][`Parker::park()`] blocks
+//! the current thread until the parker becomes notified and then puts it back into unnotified
+//! state. Method [`unpark()`][`Unparker::unpark()`] puts it into notified state.
 //!
-//! # What is parking
+//! # Examples
 //!
-//! Conceptually, each [`Parker`] has a token which is initially not present:
+//! ```
+//! use std::thread;
+//! use std::time::Duration;
+//! use parking::Parker;
 //!
-//! * The [`Parker::park()`] method blocks the current thread unless or until the token is
-//!   available, at which point it automatically consumes the token. It may also return
-//!   *spuriously*, without consuming the token.
+//! let p = Parker::new();
+//! let u = p.unparker();
 //!
-//! * The [`Parker::park_timeout()`] method works the same as [`Parker::park()`], but blocks until
-//!   a timeout is reached.
+//! // Notify the parker.
+//! u.unpark();
 //!
-//! * The [`Parker::park_deadline()`] method works the same as [`Parker::park()`], but blocks until
-//!   a deadline is reached.
+//! // Wakes up immediately because the parker is notified.
+//! p.park();
 //!
-//! * The [`Parker::unpark()`] and [`Unparker::unpark()`] methods atomically make the token
-//!   available if it wasn't already. Because the token is initially absent, [`Unparker::unpark()`]
-//!   followed by [`Parker::park()`] will result in the second call returning immediately.
+//! thread::spawn(move || {
+//!     thread::sleep(Duration::from_millis(500));
+//!     u.unpark();
+//! });
 //!
-//! # Analogy with channels
-//!
-//! Another way of thinking about [`Parker`] is as a bounded
-//! [channel][`std::sync::mpsc::sync_channel()`] with capacity of 1.
-//!
-//! Then, [`Parker::park()`] is equivalent to blocking on a
-//! [receive][`std::sync::mpsc::Receiver::recv()`] operation, and [`Unparker::unpark()`] is
-//! equivalent to a non-blocking [send][`std::sync::mpsc::SyncSender::try_send()`] operation.
+//! // Wakes up when `u.unpark()` notifies and then goes back into unnotified state.
+//! p.park();
+//! ```
 
 #![warn(missing_docs, missing_debug_implementations, rust_2018_idioms)]
 
@@ -41,39 +39,27 @@ use std::sync::atomic::Ordering::SeqCst;
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant};
 
-/// Parks a thread.
+/// Creates a parker and an associated unparker.
 ///
 /// # Examples
 ///
 /// ```
-/// use std::thread;
-/// use std::time::Duration;
-/// use parking::Parker;
-///
-/// let p = Parker::new();
-/// let u = p.unparker();
-///
-/// // Make the token available.
-/// u.unpark();
-/// // Wakes up immediately and consumes the token.
-/// p.park();
-///
-/// thread::spawn(move || {
-///     thread::sleep(Duration::from_millis(500));
-///     u.unpark();
-/// });
-///
-/// // Wakes up when `u.unpark()` provides the token, but may also wake up
-/// // spuriously before that without consuming the token.
-/// p.park();
+/// let (p, u) = parking::pair();
 /// ```
+pub fn pair() -> (Parker, Unparker) {
+    let p = Parker::new();
+    let u = p.unparker();
+    (p, u)
+}
+
+/// Waits for a notification.
 pub struct Parker {
     unparker: Unparker,
     _marker: PhantomData<Cell<()>>,
 }
 
 impl Parker {
-    /// Creates a new [`Parker`].
+    /// Creates a new unnotified parker.
     ///
     /// # Examples
     ///
@@ -96,10 +82,7 @@ impl Parker {
         }
     }
 
-    /// Blocks the current thread until the token is made available.
-    ///
-    /// This method may wake up spuriously without consuming the token, and callers should be
-    /// prepared for this possibility.
+    /// Blocks until notified and then goes back into unnotified state.
     ///
     /// # Examples
     ///
@@ -109,22 +92,19 @@ impl Parker {
     /// let p = Parker::new();
     /// let u = p.unparker();
     ///
-    /// // Make the token available.
+    /// // Notify the parker.
     /// u.unpark();
     ///
-    /// // Wakes up immediately and consumes the token.
+    /// // Wakes up immediately because the parker is notified.
     /// p.park();
     /// ```
     pub fn park(&self) {
         self.unparker.inner.park(None);
     }
 
-    /// Blocks the current thread until the token is made available or the timeout is reached.
+    /// Blocks until notified and then goes back into unnotified state.
     ///
-    /// Returns `true` if the token was received before the timeout.
-    ///
-    /// This method may wake up spuriously without consuming the token, and callers should be
-    /// prepared for this possibility.
+    /// Returns `true` if notified before the timeout.
     ///
     /// # Examples
     ///
@@ -134,19 +114,16 @@ impl Parker {
     ///
     /// let p = Parker::new();
     ///
-    /// // Waits for the token to become available, but will not wait longer than 500 ms.
+    /// // Wait for a notification, or time out after 500 ms.
     /// p.park_timeout(Duration::from_millis(500));
     /// ```
     pub fn park_timeout(&self, timeout: Duration) -> bool {
         self.unparker.inner.park(Some(timeout))
     }
 
-    /// Blocks the current thread until the token is made available or the deadline is reached.
+    /// Blocks until notified and then goes back into unnotified state, or times out after a while.
     ///
-    /// Returns `true` if the token was received before the deadline.
-    ///
-    /// This method may wake up spuriously without consuming the token, and callers should be
-    /// prepared for this possibility.
+    /// Returns `true` if notified before the timeout.
     ///
     /// # Examples
     ///
@@ -156,7 +133,7 @@ impl Parker {
     ///
     /// let p = Parker::new();
     ///
-    /// // Waits for the token to become available, but will not wait longer than 500 ms.
+    /// // Wait for a notification, or time out after 500 ms.
     /// p.park_deadline(Instant::now() + Duration::from_millis(500));
     /// ```
     pub fn park_deadline(&self, deadline: Instant) -> bool {
@@ -165,9 +142,7 @@ impl Parker {
             .park(Some(deadline.saturating_duration_since(Instant::now())))
     }
 
-    /// Atomically makes the token available if it is not already.
-    ///
-    /// The next time a thread blocks on this [`Parker`], it will wake up immediately.
+    /// Notifies the parker.
     ///
     /// # Examples
     ///
@@ -184,8 +159,7 @@ impl Parker {
     ///     u.unpark();
     /// });
     ///
-    /// // Wakes up when `u.unpark()` provides the token, but may also wake up
-    /// // spuriously before that without consuming the token.
+    /// // Wakes up when `u.unpark()` notifies and then goes back into unnotified state.
     /// p.park();
     /// ```
     pub fn unpark(&self) {
@@ -194,7 +168,7 @@ impl Parker {
 
     /// Returns a handle for unparking.
     ///
-    /// The returned [`Unparker`] handle can be cloned and shared among threads.
+    /// The returned [`Unparker`] can be cloned and shared among threads.
     ///
     /// # Examples
     ///
@@ -204,9 +178,10 @@ impl Parker {
     /// let p = Parker::new();
     /// let u = p.unparker();
     ///
-    /// // Make the token available.
+    /// // Notify the parker.
     /// u.unpark();
-    /// // Wakes up immediately and consumes the token.
+    ///
+    /// // Wakes up immediately because the parker is notified.
     /// p.park();
     /// ```
     pub fn unparker(&self) -> Unparker {
@@ -220,16 +195,13 @@ impl fmt::Debug for Parker {
     }
 }
 
-/// Unparks a thread.
+/// Notifies a parker.
 pub struct Unparker {
     inner: Arc<Inner>,
 }
 
 impl Unparker {
-    /// Atomically makes the token available if it is not already.
-    ///
-    /// This method will wake up the thread blocked on [`Parker::park()`],
-    /// [`Parker::park_timeout()`], or [`Parker::park_deadline()`], if there is one.
+    /// Notifies the associated parker.
     ///
     /// # Examples
     ///
@@ -246,8 +218,7 @@ impl Unparker {
     ///     u.unpark();
     /// });
     ///
-    /// // Wakes up when `u.unpark()` provides the token, but may also wake up
-    /// // spuriously before that without consuming the token.
+    /// // Wakes up when `u.unpark()` notifies and then goes back into unnotified state.
     /// p.park();
     /// ```
     pub fn unpark(&self) {

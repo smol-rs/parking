@@ -11,36 +11,9 @@ https://docs.rs/parking)
 
 Thread parking and unparking.
 
-This is a copy of the
-[`park()`](https://doc.rust-lang.org/std/thread/fn.park.html)/[`unpark()`](https://doc.rust-lang.org/std/thread/struct.Thread.html#method.unpark) mechanism from
-the standard library.
-
-## What is parking
-
-Conceptually, each `Parker` has a token which is initially not present:
-
-* The `Parker::park()` method blocks the current thread unless or until the token is
-  available, at which point it automatically consumes the token. It may also return
-  *spuriously*, without consuming the token.
-
-* The `Parker::park_timeout()` method works the same as `Parker::park()`, but blocks until
-  a timeout is reached.
-
-* The `Parker::park_deadline()` method works the same as `Parker::park()`, but blocks until
-  a deadline is reached.
-
-* The `Parker::unpark()` and `Unparker::unpark()` methods atomically make the token
-  available if it wasn't already. Because the token is initially absent, `Unparker::unpark()`
-  followed by `Parker::park()` will result in the second call returning immediately.
-
-## Analogy with channels
-
-Another way of thinking about `Parker` is as a bounded
-[channel](https://doc.rust-lang.org/std/sync/mpsc/fn.sync_channel.html) with capacity of 1.
-
-Then, `Parker::park()` is equivalent to blocking on a
-[receive](https://doc.rust-lang.org/std/sync/mpsc/fn.sync_channel.html) operation, and `Unparker::unpark()` is
-equivalent to a non-blocking [send](https://doc.rust-lang.org/std/sync/mpsc/struct.SyncSender.html#method.try_send) operation.
+A parker is in either notified or unnotified state. Method `park()` blocks
+the current thread until the parker becomes notified and then puts it back into unnotified
+state. Method `unpark()` puts it into notified state.
 
 ## Examples
 
@@ -52,9 +25,10 @@ use parking::Parker;
 let p = Parker::new();
 let u = p.unparker();
 
-// Make the token available.
+// Notify the parker.
 u.unpark();
-// Wakes up immediately and consumes the token.
+
+// Wakes up immediately because the parker is notified.
 p.park();
 
 thread::spawn(move || {
@@ -62,8 +36,7 @@ thread::spawn(move || {
     u.unpark();
 });
 
-// Wakes up when `u.unpark()` provides the token, but may also wake up
-// spuriously before that without consuming the token.
+// Wakes up when `u.unpark()` notifies and then goes back into unnotified state.
 p.park();
 ```
 
