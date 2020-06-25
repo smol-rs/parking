@@ -102,7 +102,8 @@ impl Parker {
         self.unparker.inner.park(None);
     }
 
-    /// Blocks until notified and then goes back into unnotified state.
+    /// Blocks until notified and then goes back into unnotified state, or times out after
+    /// `duration`.
     ///
     /// Returns `true` if notified before the timeout.
     ///
@@ -117,13 +118,13 @@ impl Parker {
     /// // Wait for a notification, or time out after 500 ms.
     /// p.park_timeout(Duration::from_millis(500));
     /// ```
-    pub fn park_timeout(&self, timeout: Duration) -> bool {
-        self.unparker.inner.park(Some(timeout))
+    pub fn park_timeout(&self, duration: Duration) -> bool {
+        self.unparker.inner.park(Some(duration))
     }
 
-    /// Blocks until notified and then goes back into unnotified state, or times out after a while.
+    /// Blocks until notified and then goes back into unnotified state, or times out at `instant`.
     ///
-    /// Returns `true` if notified before the timeout.
+    /// Returns `true` if notified before the deadline.
     ///
     /// # Examples
     ///
@@ -136,10 +137,10 @@ impl Parker {
     /// // Wait for a notification, or time out after 500 ms.
     /// p.park_deadline(Instant::now() + Duration::from_millis(500));
     /// ```
-    pub fn park_deadline(&self, deadline: Instant) -> bool {
+    pub fn park_deadline(&self, instant: Instant) -> bool {
         self.unparker
             .inner
-            .park(Some(deadline.saturating_duration_since(Instant::now())))
+            .park(Some(instant.saturating_duration_since(Instant::now())))
     }
 
     /// Notifies the parker.
