@@ -1,3 +1,7 @@
+# Version 1.0.3
+
+- Improved documentation.
+
 # Version 1.0.2
 
 - Remove all unsafe code.
