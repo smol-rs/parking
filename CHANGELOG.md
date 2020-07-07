@@ -1,3 +1,7 @@
+# Version 1.0.4
+
+- Forbid unsafe code.
+
 # Version 1.0.3
 
 - Improved documentation.
