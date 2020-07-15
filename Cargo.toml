@@ -1,6 +1,6 @@
 [package]
 name = "parking"
-version = "1.0.4"
+version = "1.0.5"
 authors = ["Stjepan Glavina <stjepang@gmail.com>"]
 edition = "2018"
 description = "Thread parking and unparking"

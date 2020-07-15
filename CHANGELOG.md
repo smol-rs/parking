@@ -1,3 +1,7 @@
+# Version 1.0.5
+
+- Implement `Default` for `Parker`.
+
 # Version 1.0.4
 
 - Forbid unsafe code.
