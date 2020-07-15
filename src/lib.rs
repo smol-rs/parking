@@ -191,6 +191,12 @@ impl Parker {
     }
 }
 
+impl Default for Parker {
+    fn default() -> Parker {
+        Parker::new()
+    }
+}
+
 impl fmt::Debug for Parker {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.pad("Parker { .. }")
@@ -295,9 +301,9 @@ impl Inner {
                     // Block the current thread on the conditional variable.
                     m = self.cvar.wait(m).unwrap();
 
-                    match self.state.compare_exchange(NOTIFIED, EMPTY, SeqCst, SeqCst) {
-                        Ok(_) => return true, // got a notification
-                        Err(_) => {}          // spurious wakeup, go back to sleep
+                    if self.state.compare_exchange(NOTIFIED, EMPTY, SeqCst, SeqCst).is_ok() {
+                        // got a notification
+                        return true;
                     }
                 }
             }
