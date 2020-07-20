@@ -1,7 +1,10 @@
 [package]
 name = "parking"
 version = "1.0.5"
-authors = ["Stjepan Glavina <stjepang@gmail.com>"]
+authors = [
+  "Stjepan Glavina <stjepang@gmail.com>",
+  "The Rust Project Developers",
+]
 edition = "2018"
 description = "Thread parking and unparking"
 license = "Apache-2.0 OR MIT"
