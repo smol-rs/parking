@@ -60,7 +60,7 @@ pub struct Parker {
 }
 
 impl Parker {
-    /// Creates a new unnotified parker.
+    /// Creates a new parker.
     ///
     /// # Examples
     ///
