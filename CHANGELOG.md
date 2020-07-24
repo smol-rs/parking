@@ -1,3 +1,7 @@
+# Version 1.0.6
+
+- Add more details on licensing.
+
 # Version 1.0.5
 
 - Implement `Default` for `Parker`.
