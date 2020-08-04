@@ -1,3 +1,7 @@
+# Version 2.0.0
+
+- Return `bool` from `unpark()` methods.
+
 # Version 1.0.6
 
 - Add more details on licensing.
