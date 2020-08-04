@@ -146,6 +146,9 @@ impl Parker {
 
     /// Notifies the parker.
     ///
+    /// Returns `true` if this call is the first to notify the parker, or `false` if the parker
+    /// was already notified.
+    ///
     /// # Examples
     ///
     /// ```
@@ -154,17 +157,14 @@ impl Parker {
     /// use parking::Parker;
     ///
     /// let p = Parker::new();
-    /// let u = p.unparker();
     ///
-    /// thread::spawn(move || {
-    ///     thread::sleep(Duration::from_millis(500));
-    ///     u.unpark();
-    /// });
+    /// assert_eq!(p.unpark(), true);
+    /// assert_eq!(p.unpark(), false);
     ///
-    /// // Wakes up when `u.unpark()` notifies and then goes back into unnotified state.
+    /// // Wakes up immediately.
     /// p.park();
     /// ```
-    pub fn unpark(&self) {
+    pub fn unpark(&self) -> bool {
         self.unparker.unpark()
     }
 
@@ -211,6 +211,9 @@ pub struct Unparker {
 impl Unparker {
     /// Notifies the associated parker.
     ///
+    /// Returns `true` if this call is the first to notify the parker, or `false` if the parker
+    /// was already notified.
+    ///
     /// # Examples
     ///
     /// ```
@@ -229,7 +232,7 @@ impl Unparker {
     /// // Wakes up when `u.unpark()` notifies and then goes back into unnotified state.
     /// p.park();
     /// ```
-    pub fn unpark(&self) {
+    pub fn unpark(&self) -> bool {
         self.inner.unpark()
     }
 }
@@ -322,15 +325,15 @@ impl Inner {
         }
     }
 
-    pub fn unpark(&self) {
+    pub fn unpark(&self) -> bool {
         // To ensure the unparked thread will observe any writes we made before this call, we must
         // perform a release operation that `park` can synchronize with. To do that we must write
         // `NOTIFIED` even if `state` is already `NOTIFIED`. That is why this must be a swap rather
         // than a compare-and-swap that returns if it reads `NOTIFIED` on failure.
         match self.state.swap(NOTIFIED, SeqCst) {
-            EMPTY => return,    // no one was waiting
-            NOTIFIED => return, // already unparked
-            PARKED => {}        // gotta go wake someone up
+            EMPTY => return true,     // no one was waiting
+            NOTIFIED => return false, // already unparked
+            PARKED => {}              // gotta go wake someone up
             _ => panic!("inconsistent state in unpark"),
         }
 
@@ -344,5 +347,6 @@ impl Inner {
         // it doesn't get woken only to have to wait for us to release `lock`.
         drop(self.lock.lock().unwrap());
         self.cvar.notify_one();
+        true
     }
 }
