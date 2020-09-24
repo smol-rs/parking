@@ -15,5 +15,8 @@ keywords = ["park", "notify", "thread", "wake", "condition"]
 categories = ["concurrency"]
 readme = "README.md"
 
+[dependencies]
+parking_lot = "0.11.0"
+
 [dev-dependencies]
 easy-parallel = "3.0.0"
