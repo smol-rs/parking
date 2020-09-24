@@ -37,8 +37,10 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
+
+use parking_lot::{Condvar, Mutex};
 
 /// Creates a parker and an associated unparker.
 ///
@@ -280,7 +282,7 @@ impl Inner {
         }
 
         // Otherwise we need to coordinate going to sleep.
-        let mut m = self.lock.lock().unwrap();
+        let mut m = self.lock.lock();
 
         match self.state.compare_exchange(EMPTY, PARKED, SeqCst, SeqCst) {
             Ok(_) => {}
@@ -302,9 +304,13 @@ impl Inner {
             None => {
                 loop {
                     // Block the current thread on the conditional variable.
-                    m = self.cvar.wait(m).unwrap();
+                    self.cvar.wait(&mut m);
 
-                    if self.state.compare_exchange(NOTIFIED, EMPTY, SeqCst, SeqCst).is_ok() {
+                    if self
+                        .state
+                        .compare_exchange(NOTIFIED, EMPTY, SeqCst, SeqCst)
+                        .is_ok()
+                    {
                         // got a notification
                         return true;
                     }
@@ -314,7 +320,7 @@ impl Inner {
                 // Wait with a timeout, and if we spuriously wake up or otherwise wake up from a
                 // notification we just want to unconditionally set `state` back to `EMPTY`, either
                 // consuming a notification or un-flagging ourselves as parked.
-                let (_m, _result) = self.cvar.wait_timeout(m, timeout).unwrap();
+                let _result = self.cvar.wait_for(&mut m, timeout);
 
                 match self.state.swap(EMPTY, SeqCst) {
                     NOTIFIED => true, // got a notification
@@ -345,7 +351,7 @@ impl Inner {
         //
         // Releasing `lock` before the call to `notify_one` means that when the parked thread wakes
         // it doesn't get woken only to have to wait for us to release `lock`.
-        drop(self.lock.lock().unwrap());
+        drop(self.lock.lock());
         self.cvar.notify_one();
         true
     }
