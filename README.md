@@ -1,9 +1,9 @@
 # parking
 
-[![Build](https://github.com/stjepang/parking/workflows/Build%20and%20test/badge.svg)](
-https://github.com/stjepang/parking/actions)
+[![Build](https://github.com/smol-rs/parking/workflows/Build%20and%20test/badge.svg)](
+https://github.com/smol-rs/parking/actions)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](
-https://github.com/stjepang/parking)
+https://github.com/smol-rs/parking)
 [![Cargo](https://img.shields.io/crates/v/parking.svg)](
 https://crates.io/crates/parking)
 [![Documentation](https://docs.rs/parking/badge.svg)](
