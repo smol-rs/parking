@@ -13,7 +13,6 @@ homepage = "https://github.com/smol-rs/parking"
 documentation = "https://docs.rs/parking"
 keywords = ["park", "notify", "thread", "wake", "condition"]
 categories = ["concurrency"]
-readme = "README.md"
 
 [dev-dependencies]
 easy-parallel = "3.0.0"
