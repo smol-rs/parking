@@ -43,9 +43,9 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::time::{Duration, Instant};
 
-use sync::atomic::Ordering::SeqCst;
 use sync::atomic::AtomicUsize;
-use sync::{Arc, Mutex, Condvar};
+use sync::atomic::Ordering::SeqCst;
+use sync::{Arc, Condvar, Mutex};
 
 /// Creates a parker and an associated unparker.
 ///

@@ -6,7 +6,7 @@ fn smoke() {
         let (p, u) = parking::pair();
 
         loom::thread::spawn(move || {
-            p.park(); 
+            p.park();
         });
 
         u.unpark();
