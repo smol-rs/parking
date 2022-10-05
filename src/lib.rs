@@ -41,7 +41,10 @@ use loom::sync;
 use std::cell::Cell;
 use std::fmt;
 use std::marker::PhantomData;
-use std::time::{Duration, Instant};
+use std::time::Duration;
+
+#[cfg(not(all(loom, feature = "loom")))]
+use std::time::Instant;
 
 use sync::atomic::AtomicUsize;
 use sync::atomic::Ordering::SeqCst;
@@ -340,6 +343,7 @@ impl Inner {
 
                 #[cfg(loom)]
                 {
+                    let _ = timeout;
                     panic!("park_timeout is not supported under loom");
                 }
             }
