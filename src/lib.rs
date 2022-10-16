@@ -32,13 +32,23 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs, missing_debug_implementations, rust_2018_idioms)]
 
+#[cfg(not(all(loom, feature = "loom")))]
+use std::sync;
+
+#[cfg(all(loom, feature = "loom"))]
+use loom::sync;
+
 use std::cell::Cell;
 use std::fmt;
 use std::marker::PhantomData;
-use std::sync::atomic::AtomicUsize;
-use std::sync::atomic::Ordering::SeqCst;
-use std::sync::{Arc, Condvar, Mutex};
-use std::time::{Duration, Instant};
+use std::time::Duration;
+
+#[cfg(not(all(loom, feature = "loom")))]
+use std::time::Instant;
+
+use sync::atomic::AtomicUsize;
+use sync::atomic::Ordering::SeqCst;
+use sync::{Arc, Condvar, Mutex};
 
 /// Creates a parker and an associated unparker.
 ///
@@ -119,6 +129,7 @@ impl Parker {
     /// // Wait for a notification, or time out after 500 ms.
     /// p.park_timeout(Duration::from_millis(500));
     /// ```
+    #[cfg(not(loom))]
     pub fn park_timeout(&self, duration: Duration) -> bool {
         self.unparker.inner.park(Some(duration))
     }
@@ -138,6 +149,7 @@ impl Parker {
     /// // Wait for a notification, or time out after 500 ms.
     /// p.park_deadline(Instant::now() + Duration::from_millis(500));
     /// ```
+    #[cfg(not(loom))]
     pub fn park_deadline(&self, instant: Instant) -> bool {
         self.unparker
             .inner
@@ -315,15 +327,24 @@ impl Inner {
                 }
             }
             Some(timeout) => {
-                // Wait with a timeout, and if we spuriously wake up or otherwise wake up from a
-                // notification we just want to unconditionally set `state` back to `EMPTY`, either
-                // consuming a notification or un-flagging ourselves as parked.
-                let (_m, _result) = self.cvar.wait_timeout(m, timeout).unwrap();
+                #[cfg(not(loom))]
+                {
+                    // Wait with a timeout, and if we spuriously wake up or otherwise wake up from a
+                    // notification we just want to unconditionally set `state` back to `EMPTY`, either
+                    // consuming a notification or un-flagging ourselves as parked.
+                    let (_m, _result) = self.cvar.wait_timeout(m, timeout).unwrap();
 
-                match self.state.swap(EMPTY, SeqCst) {
-                    NOTIFIED => true, // got a notification
-                    PARKED => false,  // no notification
-                    n => panic!("inconsistent park_timeout state: {}", n),
+                    match self.state.swap(EMPTY, SeqCst) {
+                        NOTIFIED => true, // got a notification
+                        PARKED => false,  // no notification
+                        n => panic!("inconsistent park_timeout state: {}", n),
+                    }
+                }
+
+                #[cfg(loom)]
+                {
+                    let _ = timeout;
+                    panic!("park_timeout is not supported under loom");
                 }
             }
         }

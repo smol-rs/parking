@@ -19,5 +19,12 @@ keywords = ["park", "notify", "thread", "wake", "condition"]
 categories = ["concurrency"]
 exclude = ["/.*"]
 
+# The `loom` feature, combined with the `loom` rustflag, enables a reimplementation
+# of `parking` using `loom`. This feature is perma-unstable and should not be used
+# in stable code.
+[target.'cfg(loom)'.dependencies.loom]
+version = "0.5"
+optional = true
+
 [dev-dependencies]
 easy-parallel = "3.0.0"

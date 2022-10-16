@@ -30,6 +30,10 @@ jobs:
         if: startsWith(matrix.rust, 'nightly')
         run: cargo check -Z features=dev_dep
       - run: cargo test
+      - run: cargo test --test loom --features loom
+        env:
+          RUSTFLAGS: --cfg loom
+          LOOM_MAX_PREEMPTIONS: 2
 
   msrv:
     runs-on: ubuntu-latest
