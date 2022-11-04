@@ -247,6 +247,41 @@ impl Unparker {
     pub fn unpark(&self) -> bool {
         self.inner.unpark()
     }
+
+    /// Indicates whether this unparker will unpark the associated parker.
+    ///
+    /// This can be used to avoid unnecessary work before calling `unpark()`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use parking::Parker;
+    ///
+    /// let p = Parker::new();
+    /// let u = p.unparker();
+    ///
+    /// assert!(u.will_unpark(&p));
+    /// ```
+    pub fn will_unpark(&self, parker: &Parker) -> bool {
+        Arc::ptr_eq(&self.inner, &parker.unparker.inner)
+    }
+
+    /// Indicates whether two unparkers will unpark the same parker.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use parking::Parker;
+    ///
+    /// let p = Parker::new();
+    /// let u1 = p.unparker();
+    /// let u2 = p.unparker();
+    ///
+    /// assert!(u1.same_parker(&u2));
+    /// ```
+    pub fn same_parker(&self, other: &Unparker) -> bool {
+        Arc::ptr_eq(&self.inner, &other.inner)
+    }
 }
 
 impl fmt::Debug for Unparker {
