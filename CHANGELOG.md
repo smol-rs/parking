@@ -1,3 +1,7 @@
+# Version 2.1.0
+
+- Add will_unpark and same_parker methods to Unparker. (#10)
+
 # Version 2.0.0
 
 - Return `bool` from `unpark()` methods.
