@@ -23,7 +23,7 @@ exclude = ["/.*"]
 # of `parking` using `loom`. This feature is perma-unstable and should not be used
 # in stable code.
 [target.'cfg(loom)'.dependencies.loom]
-version = "0.6"
+version = "0.7"
 optional = true
 
 [dev-dependencies]
