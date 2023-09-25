@@ -1,3 +1,7 @@
+# Version 2.1.1
+
+- Update docs with new logo. (#14)
+
 # Version 2.1.0
 
 - Add will_unpark and same_parker methods to Unparker. (#10)
