@@ -47,6 +47,7 @@ use loom::sync;
 use std::cell::Cell;
 use std::fmt;
 use std::marker::PhantomData;
+use std::task::Wake;
 use std::time::Duration;
 
 #[cfg(not(all(loom, feature = "loom")))]
@@ -414,5 +415,11 @@ impl Inner {
         drop(self.lock.lock().unwrap());
         self.cvar.notify_one();
         true
+    }
+}
+
+impl Wake for Inner {
+    fn wake(self: Arc<Self>) {
+        self.unpark();
     }
 }
