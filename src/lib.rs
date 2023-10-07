@@ -38,11 +38,7 @@
     html_logo_url = "https://raw.githubusercontent.com/smol-rs/smol/master/assets/images/logo_fullsize_transparent.png"
 )]
 
-#[cfg(not(all(loom, feature = "loom")))]
 use std::sync;
-
-#[cfg(all(loom, feature = "loom"))]
-use loom::sync;
 
 use std::cell::Cell;
 use std::fmt;
@@ -425,7 +421,7 @@ impl Inner {
 }
 
 impl Wake for Inner {
-    fn wake(self: Arc<Inner>) {
+    fn wake(self: Arc<Self>) {
         self.unpark();
     }
 
