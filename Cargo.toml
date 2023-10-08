@@ -9,7 +9,7 @@ authors = [
   "The Rust Project Developers",
 ]
 edition = "2018"
-rust-version = "1.39"
+rust-version = "1.51"
 description = "Thread parking and unparking"
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/smol-rs/parking"

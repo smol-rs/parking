@@ -47,6 +47,8 @@ use loom::sync;
 use std::cell::Cell;
 use std::fmt;
 use std::marker::PhantomData;
+use std::sync::Arc;
+use std::task::{Wake, Waker};
 use std::time::Duration;
 
 #[cfg(not(all(loom, feature = "loom")))]
@@ -54,7 +56,7 @@ use std::time::Instant;
 
 use sync::atomic::AtomicUsize;
 use sync::atomic::Ordering::SeqCst;
-use sync::{Arc, Condvar, Mutex};
+use sync::{Condvar, Mutex};
 
 /// Creates a parker and an associated unparker.
 ///
@@ -304,6 +306,12 @@ impl Clone for Unparker {
     }
 }
 
+impl From<Unparker> for Waker {
+    fn from(up: Unparker) -> Self {
+        Waker::from(up.inner)
+    }
+}
+
 const EMPTY: usize = 0;
 const PARKED: usize = 1;
 const NOTIFIED: usize = 2;
@@ -414,5 +422,17 @@ impl Inner {
         drop(self.lock.lock().unwrap());
         self.cvar.notify_one();
         true
+    }
+}
+
+impl Wake for Inner {
+    #[inline]
+    fn wake(self: Arc<Self>) {
+        self.unpark();
+    }
+
+    #[inline]
+    fn wake_by_ref(self: &Arc<Self>) {
+        self.unpark();
     }
 }
