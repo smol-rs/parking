@@ -38,11 +38,16 @@
     html_logo_url = "https://raw.githubusercontent.com/smol-rs/smol/master/assets/images/logo_fullsize_transparent.png"
 )]
 
+#[cfg(not(all(loom, feature = "loom")))]
 use std::sync;
+
+#[cfg(all(loom, feature = "loom"))]
+use loom::sync;
 
 use std::cell::Cell;
 use std::fmt;
 use std::marker::PhantomData;
+use std::sync::Arc;
 use std::task::{Wake, Waker};
 use std::time::Duration;
 
@@ -51,7 +56,7 @@ use std::time::Instant;
 
 use sync::atomic::AtomicUsize;
 use sync::atomic::Ordering::SeqCst;
-use sync::{Arc, Condvar, Mutex};
+use sync::{Condvar, Mutex};
 
 /// Creates a parker and an associated unparker.
 ///
@@ -421,10 +426,12 @@ impl Inner {
 }
 
 impl Wake for Inner {
+    #[inline]
     fn wake(self: Arc<Self>) {
         self.unpark();
     }
 
+    #[inline]
     fn wake_by_ref(self: &Arc<Self>) {
         self.unpark();
     }
