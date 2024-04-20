@@ -29,6 +29,7 @@
 //! p.park();
 //! ```
 
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 #![forbid(unsafe_code)]
 #![warn(missing_docs, missing_debug_implementations, rust_2018_idioms)]
 #![doc(
@@ -57,6 +58,24 @@ use std::time::Instant;
 use sync::atomic::AtomicUsize;
 use sync::atomic::Ordering::SeqCst;
 use sync::{Condvar, Mutex};
+
+#[cfg(coverage)]
+#[coverage(off)]
+fn cov_assert(x: bool, msg: &str) {
+    if !x {
+        panic!("{}", msg);
+    }
+}
+
+#[cfg(not(coverage))]
+use assert_eq as cov_assert_eq;
+
+#[cfg(coverage)]
+macro_rules! cov_assert_eq {
+    ($left:expr, $right:expr, $msg:literal) => {{
+        cov_assert($left == $right, $msg)
+    }};
+}
 
 /// Creates a parker and an associated unparker.
 ///
@@ -353,7 +372,7 @@ impl Inner {
                 // with that `unpark` to observe any writes it made before the call to `unpark`. To
                 // do that we must read from the write it made to `state`.
                 let old = self.state.swap(EMPTY, SeqCst);
-                assert_eq!(old, NOTIFIED, "park state changed unexpectedly");
+                cov_assert_eq!(old, NOTIFIED, "park state changed unexpectedly");
                 return true;
             }
             Err(n) => panic!("inconsistent park_timeout state: {}", n),
