@@ -1,8 +1,19 @@
 //! Thread parking and unparking.
 //!
-//! A parker is in either notified or unnotified state. Method [`park()`][`Parker::park()`] blocks
-//! the current thread until the parker becomes notified and then puts it back into unnotified
-//! state. Method [`unpark()`][`Unparker::unpark()`] puts it into notified state.
+//! A [`Parker`] is in either the notified or unnotified state. The [`park()`][`Parker::park()`] method blocks
+//! the current thread until the [`Parker`] becomes notified and then puts it back into the unnotified
+//! state. The [`unpark()`][`Unparker::unpark()`] method puts it into the notified state.
+//!
+//! This API is similar to [`thread::park()`] and [`Thread::unpark()`] from the standard library.
+//! The difference is that the state "token" managed by those functions is shared across an entire
+//! thread, and anyone can call [`thread::current()`] to access it. If you use `park` and `unpark`,
+//! but you also call a function that uses `park` and `unpark` internally, that function could
+//! cause a deadlock by consuming a wakeup that was intended for you. The [`Parker`] object in this
+//! crate avoids that problem by managing its own state, which isn't shared with unrelated callers.
+//!
+//! [`thread::park()`]: https://doc.rust-lang.org/std/thread/fn.park.html
+//! [`Thread::unpark()`]: https://doc.rust-lang.org/std/thread/struct.Thread.html#method.unpark
+//! [`thread::current()`]: https://doc.rust-lang.org/std/thread/fn.current.html
 //!
 //! # Examples
 //!
