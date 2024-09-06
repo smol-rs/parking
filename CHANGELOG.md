@@ -1,3 +1,7 @@
+# Version 2.2.1
+
+- Specify the reason for using `parking` in the docs. (#25)
+
 # Version 2.2.0
 
 - Implement `From<Unparker>` for `Waker`. This enables `Waker`s to be constructed from `Unparker`s without allocating. (#18)
