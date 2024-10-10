@@ -86,6 +86,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # https://github.com/rustsec/audit-check/issues/2
-      - uses: rustsec/audit-check@master
+      - uses: rustsec/audit-check@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
