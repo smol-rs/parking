@@ -26,5 +26,8 @@ exclude = ["/.*"]
 version = "0.7"
 optional = true
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(loom)"] }
+
 [dev-dependencies]
 easy-parallel = "3.0.0"
